@@ -1,12 +1,12 @@
-import face.FaceLoginInfo;
-import face.FaceManager;
-import face.NVSSDK;
+package com.xdlr.camera;
+
+import com.xdlr.camera.face.FaceLoginInfo;
+import com.xdlr.camera.face.FaceManager;
+import com.xdlr.camera.face.NVSSDK;
+import com.xdlr.camera.token.TokenTransfer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import token.TokenTransfer;
 
-
-//人脸参数相关
 public class FaceClient {
     private static final Logger logger = LoggerFactory.getLogger(FaceClient.class);
     private FaceManager[] faceManagers = new FaceManager[FaceLoginInfo.DEVICE_COUNT];
@@ -26,7 +26,6 @@ public class FaceClient {
             // 程序退出
             client.exit();
         }
-
     }
 
     private void init() {
@@ -73,13 +72,13 @@ public class FaceClient {
             faceManager.registerSnapListener(
                     new FaceManager.SnapNotifyListener() {
                         @Override
-                        public void snapNotify(boolean isStranger, String faceDeviceId, String certNum, String negativePicturePath) {
+                        public void snapNotify(boolean isStranger, String faceDeviceId, String faceId, String negativePicturePath) {
                             logger.debug("收到抓拍回调通知，开启新线程处理用户信息");
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
                                     logger.debug("处理用户积分");
-                                    handleToken(isStranger, faceDeviceId, certNum, negativePicturePath);
+                                    handleToken(isStranger, faceDeviceId, faceId, negativePicturePath);
                                 }
                             }).start();
                         }
@@ -96,11 +95,9 @@ public class FaceClient {
 
                         }
                     }
-
             );
         }
     }
-
 
     private NegativePicture lastestNegativePicture;
 
@@ -115,7 +112,8 @@ public class FaceClient {
         }
     }
 
-    void handleToken(boolean isStranger, String faceDeviceId, String certNum, String negativePicturePath) {
+    void handleToken(boolean isStranger, String faceDeviceId, String faceId, String negativePicturePath) {
+        System.out.println("isStranger: " + isStranger + " faceDeviceId: " + faceDeviceId + " faceId: " + faceId);
         if (isStranger) {
             // 进入抓拍机
             if (FaceLoginInfo.FACE_DEVICE_ONE_ID.equals(faceDeviceId)) {
@@ -123,23 +121,25 @@ public class FaceClient {
                 for (FaceManager faceManager : faceManagers) {
                     System.out.println("请等待智能分析暂停结果!");
                     faceManager.SetVcaStatue(NVSSDK.VCA_SUSPEND_STATUS_PAUSE); // 暂停
-                    lastestNegativePicture = new NegativePicture(certNum, negativePicturePath);
+                    lastestNegativePicture = new NegativePicture(faceId, negativePicturePath);
                 }
                 System.out.println("抓拍到新人");
-                tokenTransfer.initToken(certNum, negativePicturePath);
+                tokenTransfer.initToken(faceId, negativePicturePath);
             }
         } else {
             if (FaceLoginInfo.FACE_DEVICE_THREE_ID.equals(faceDeviceId)) {
                 // 售货机
                 System.out.println("出货");
-                tokenTransfer.renderGoods(certNum, negativePicturePath);
+                tokenTransfer.renderGoods(faceId, negativePicturePath);
             } else if (FaceLoginInfo.FACE_DEVICE_TWO_ID.equals(faceDeviceId)) {
                 // 出口
                 System.out.println("出口");
-                tokenTransfer.doNothing(certNum, negativePicturePath);
+                tokenTransfer.doNothing(faceId, negativePicturePath);
             } else if (FaceLoginInfo.FACE_DEVICE_FOUR_ID.equals(faceDeviceId)) {
                 System.out.println("文明行为");
-                tokenTransfer.addToken(certNum, negativePicturePath);
+                tokenTransfer.addToken(faceId, negativePicturePath);
+            } else if (FaceLoginInfo.FACE_DEVICE_ONE_ID.equals(faceDeviceId)) {
+                System.out.println("主抓拍机");
             }
         }
     }

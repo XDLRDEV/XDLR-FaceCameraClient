@@ -1,4 +1,4 @@
-package util;
+package com.xdlr.camera.util;
 
 import javax.net.ssl.*;
 import java.io.*;
@@ -112,10 +112,7 @@ public class HttpsUtil {
     }
 
     public static void main(String[] args) {
-//            byte[] b = doGet("https://125.76.159.135/cli/request?cid=1");
-//            byte[] a = doPost("https://jqhu.top/cli/request","cid=1");
         byte[] res = HttpsUtil.doGet("https://125.76.159.135/user/update" + "?uid=04wo7KqPtv&uinfo=helloworld");
         System.out.println(HttpsUtil.getString(res));
-
     }
 }

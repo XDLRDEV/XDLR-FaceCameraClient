@@ -1,4 +1,4 @@
-package util;
+package com.xdlr.camera.util;
 
 import java.util.Random;
 
@@ -10,9 +10,4 @@ public class IdUtil {
         }
         return id.toString();
     }
-
-    public static void main(String[] args) {
-        System.out.println(generateId());
-    }
-
 }

@@ -1,12 +1,12 @@
-package face;
+package com.xdlr.camera.face;
 
 import com.sun.org.apache.bcel.internal.generic.FCMPG;
-import face.NVSSDK.*;
+import com.xdlr.camera.util.IdUtil;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.IdUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,7 +42,7 @@ public class FaceManager {
 
     public interface SnapNotifyListener {
 
-        void snapNotify(boolean isStranger, String faceDeviceId, String certNum, String negativePicturePath);
+        void snapNotify(boolean isStranger, String faceDeviceId, String faceId, String negativePicturePath);
 
         void vcaSuspendSucceed(FaceManager faceManager);
     }
@@ -78,18 +78,18 @@ public class FaceManager {
     }
 
     //主回调
-    MAIN_NOTIFY cbkMain = new MAIN_NOTIFY() {
+    NVSSDK.MAIN_NOTIFY cbkMain = new NVSSDK.MAIN_NOTIFY() {
         public void MainNotify(int iLogonID, int wParam, Pointer lParam, Pointer notifyUserData) {
             int iMsgType = wParam & 0xFFFF;
             if (NVSSDK.WCM_LOGON_NOTIFY == iMsgType) {    //设备登录消息
-                ENCODERINFO tDevInfo = new ENCODERINFO();
+                NVSSDK.ENCODERINFO tDevInfo = new NVSSDK.ENCODERINFO();
                 NetClient.GetDevInfo(iLogonID, tDevInfo);
                 String strIP = new String(tDevInfo.m_cEncoder).trim();
                 String strID = new String(tDevInfo.m_cFactoryID).trim();
                 //处理设备登录状态
                 LogonNotify(strIP, strID, iLogonID, wParam >> 16);
             } else if (NVSSDK.WCM_VCA_SUSPEND == iMsgType) {
-                VCASuspendResult tParam = new VCASuspendResult();
+                NVSSDK.VCASuspendResult tParam = new NVSSDK.VCASuspendResult();
                 tParam.iSize = tParam.size();
                 tParam.write();
                 NetClient.GetDevConfig(m_iLogonID, NVSSDK.NET_CLIENT_VCA_SUSPEND, 0, tParam.getPointer(), tParam.size());
@@ -158,7 +158,7 @@ public class FaceManager {
             iPort = 3000;
         }
 
-        LogonPara tInfo = new LogonPara();
+        NVSSDK.LogonPara tInfo = new NVSSDK.LogonPara();
         //必须字段
         tInfo.iSize = tInfo.size();                     //结构体大小
         tInfo.cNvsIP = strIp.getBytes();                //设备ip
@@ -198,7 +198,7 @@ public class FaceManager {
     //sdk初始化
     public int SDKInit() {
         //获取sdk版本
-        SDK_VERSION ver = new SDK_VERSION();
+        NVSSDK.SDK_VERSION ver = new NVSSDK.SDK_VERSION();
         int iRet = NetClient.GetVersion(ver);
         System.out.println(tag + "SDK Version is " + ver.m_ulMajorVersion + "."
                 + ver.m_ulMinorVersion + "." + ver.m_ulBuilder + " "
@@ -216,12 +216,12 @@ public class FaceManager {
     public int FaceLibraryQuery() {
         int iRet = -1;
         int iPageCount = 20;//NVSSDK.FACE_MAX_PAGE_COUNT; //每页个数，每页最大查询20个
-        FaceLibQuery tQuery = new FaceLibQuery();
+        NVSSDK.FaceLibQuery tQuery = new NVSSDK.FaceLibQuery();
         tQuery.iSize = tQuery.size();
         tQuery.iChanNo = 0;        //通道号，0表示第一通道，IPC只有1个通道
         tQuery.iPageCount = iPageCount;
 
-        FaceLibQueryResult tSingle = new FaceLibQueryResult();
+        NVSSDK.FaceLibQueryResult tSingle = new NVSSDK.FaceLibQueryResult();
         int iSingleSize = tSingle.size();
         m_iLibKey = 0;
 
@@ -230,7 +230,7 @@ public class FaceManager {
             tQuery.iPageNo = iPageNo;
             tQuery.write();
             //查询库信息
-            FaceLibQueryResultArr tResult = new FaceLibQueryResultArr();
+            NVSSDK.FaceLibQueryResultArr tResult = new NVSSDK.FaceLibQueryResultArr();
             tResult.write();
             iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_LIB_QUERY, tQuery.iChanNo, tQuery.getPointer(), tQuery.size(), tResult.getPointer(), iSingleSize);
             if (0 != iRet) {
@@ -273,7 +273,7 @@ public class FaceManager {
 
     //人脸库添加
     public int FaceLibraryAdd() {
-        FaceLibEdit tInfo = new FaceLibEdit();
+        NVSSDK.FaceLibEdit tInfo = new NVSSDK.FaceLibEdit();
         //必须字段
         tInfo.iSize = tInfo.size();
         tInfo.iChanNo = 0;        //通道号，0表示第一通道，IPC只有1个通道
@@ -294,7 +294,7 @@ public class FaceManager {
 
         tInfo.write();
         //添加
-        FaceReply tReply = new FaceReply();
+        NVSSDK.FaceReply tReply = new NVSSDK.FaceReply();
         tReply.write();
         int iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_LIB_EDIT, tInfo.iChanNo, tInfo.getPointer(), tInfo.size(), tReply.getPointer(), tReply.size());
         if (0 != iRet) {
@@ -315,7 +315,7 @@ public class FaceManager {
             return -1;
         }
 
-        FaceLibEdit tInfo = new FaceLibEdit();
+        NVSSDK.FaceLibEdit tInfo = new NVSSDK.FaceLibEdit();
         tInfo.iSize = tInfo.size();
         tInfo.iChanNo = 0;        //通道号，0表示第一通道，IPC只有1个通道
         tInfo.tFaceLib.iThreshold = 80;    //识别阀值，范围0~100
@@ -330,7 +330,7 @@ public class FaceManager {
         tInfo.write();
 
         //修改
-        FaceReply tReply = new FaceReply();
+        NVSSDK.FaceReply tReply = new NVSSDK.FaceReply();
         tReply.write();
         int iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_LIB_EDIT, tInfo.iChanNo, tInfo.getPointer(), tInfo.size(), tReply.getPointer(), tReply.size());
         if (0 != iRet) {
@@ -351,13 +351,13 @@ public class FaceManager {
             return -1;
         }
 
-        FaceLibDelete tInfo = new FaceLibDelete();
+        NVSSDK.FaceLibDelete tInfo = new NVSSDK.FaceLibDelete();
         tInfo.iSize = tInfo.size();
         tInfo.iChanNo = 0;        //通道号，0表示第一通道，IPC只有1个通道
         tInfo.iLibKey = m_iLibKey;//此处默认删除第一个库;
         tInfo.write();
 
-        FaceReply tReply = new FaceReply();
+        NVSSDK.FaceReply tReply = new NVSSDK.FaceReply();
         tReply.write();
         int iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_LIB_DELETE, tInfo.iChanNo, tInfo.getPointer(), tInfo.size(), tReply.getPointer(), tReply.size());
         if (0 != iRet) {
@@ -379,7 +379,7 @@ public class FaceManager {
         }
 
         //查询条件
-        FaceQuery tInfo = new FaceQuery();
+        NVSSDK.FaceQuery tInfo = new NVSSDK.FaceQuery();
         //必须字段
         tInfo.iSize = tInfo.size();
         tInfo.iChanNo = 0;        //通道号，0表示第一通道，IPC只有1个通道
@@ -400,8 +400,8 @@ public class FaceManager {
         //end
         tInfo.write();
         //查询1
-        FaceQueryResult tSingle = new FaceQueryResult();
-        FaceQueryResultArr tResult = new FaceQueryResultArr();
+        NVSSDK.FaceQueryResult tSingle = new NVSSDK.FaceQueryResult();
+        NVSSDK.FaceQueryResultArr tResult = new NVSSDK.FaceQueryResultArr();
         tResult.write();
         int iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_QUERY, tInfo.iChanNo, tInfo.getPointer(), tInfo.size(), tResult.getPointer(), tSingle.size());
         if (0 != iRet) {
@@ -429,7 +429,7 @@ public class FaceManager {
             return -1;
         }
 
-        FaceEdit tInfo = new FaceEdit();
+        NVSSDK.FaceEdit tInfo = new NVSSDK.FaceEdit();
         //必须字段
         tInfo.iSize = tInfo.size();
         tInfo.iChanNo = 0;                //通道号，0表示第一通道，IPC只有1个通道
@@ -454,7 +454,7 @@ public class FaceManager {
 //        tInfo.tFace.cFaceUUID = "".getBytes();
         tInfo.write();
 
-        FaceReply tReply = new FaceReply();
+        NVSSDK.FaceReply tReply = new NVSSDK.FaceReply();
         tReply.write();
         int iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_EDIT, tInfo.iChanNo, tInfo.getPointer(), tInfo.size(), tReply.getPointer(), tReply.size());
         tReply.read();
@@ -477,7 +477,7 @@ public class FaceManager {
             return -1;
         }
 
-        FaceEdit tInfo = new FaceEdit();
+        NVSSDK.FaceEdit tInfo = new NVSSDK.FaceEdit();
         //必须字段
         tInfo.iSize = tInfo.size();
         tInfo.iChanNo = 0;                //通道号，0表示第一通道，IPC只有1个通道
@@ -496,7 +496,7 @@ public class FaceManager {
         //end
         tInfo.write();
 
-        FaceReply tReply = new FaceReply();
+        NVSSDK.FaceReply tReply = new NVSSDK.FaceReply();
         tReply.write();
         int iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_EDIT, tInfo.iChanNo, tInfo.getPointer(), tInfo.size(), tReply.getPointer(), tReply.size());
         tReply.read();
@@ -516,14 +516,14 @@ public class FaceManager {
             return -1;
         }
 
-        FaceDelete tInfo = new FaceDelete();
+        NVSSDK.FaceDelete tInfo = new NVSSDK.FaceDelete();
         tInfo.iSize = tInfo.size();
         tInfo.iChanNo = 0;        //通道号，0表示第一通道，IPC只有1个通道
         tInfo.iLibKey = m_iLibKey;
         tInfo.iFaceKey = m_iFaceKey;
         tInfo.write();
 
-        FaceReply tReply = new FaceReply();
+        NVSSDK.FaceReply tReply = new NVSSDK.FaceReply();
         tReply.write();
         int iRet = NetClient.FaceConfig(m_iLogonID, NVSSDK.FACE_CMD_DELETE, tInfo.iChanNo, tInfo.getPointer(), tInfo.size(), tReply.getPointer(), tReply.size());
         tReply.read();
@@ -541,7 +541,7 @@ public class FaceManager {
     //设置智能分析状态
     public int SetVcaStatue(int _iStatus) {
         int iChanNo = 0;    //通道号，0表示第一通道，IPC只有1个通道
-        VcaStatue tInfo = new VcaStatue();
+        NVSSDK.VcaStatue tInfo = new NVSSDK.VcaStatue();
         tInfo.iStatus = _iStatus;
         tInfo.write();
         return NetClient.SetDevConfig(m_iLogonID, NVSSDK.NET_CLIENT_VCA_SUSPEND, iChanNo, tInfo.getPointer(), tInfo.size());
@@ -583,13 +583,13 @@ public class FaceManager {
     }
 
     //图片流回调
-    NET_PICSTREAM_NOTIFY CallBack_PicStreamInfo = new NET_PICSTREAM_NOTIFY() {
+    NVSSDK.NET_PICSTREAM_NOTIFY CallBack_PicStreamInfo = new NVSSDK.NET_PICSTREAM_NOTIFY() {
         public int PicDataNotify(int _ulID, int _lCommand, Pointer _tInfo, int _iLen, Pointer _lpUserData) {
             if (_lCommand != NVSSDK.NET_PICSTREAM_CMD_FACE) {
                 return -1;
             }
-
-            FacePicStream tFacePicStream = new FacePicStream();
+            String id = IdUtil.generateId();
+            NVSSDK.FacePicStream tFacePicStream = new NVSSDK.FacePicStream();
             tFacePicStream.write();
             Pointer pFaceBuffer = tFacePicStream.getPointer();
             byte[] RecvBuffer = _tInfo.getByteArray(0, _iLen);
@@ -599,7 +599,7 @@ public class FaceManager {
             // System.out.println(tag + tag + "PicDataNotify Snap Face count " + tFacePicStream.iFaceCount) ;
 
             //拷贝抓拍全景图数据
-            PicData tFullData = new PicData();   //从指针获取全景图数据
+            NVSSDK.PicData tFullData = new NVSSDK.PicData();   //从指针获取全景图数据
             tFullData.write();
             Pointer pFullBuffer = tFullData.getPointer();
             Pointer pFullData = tFacePicStream.tFullData;
@@ -609,7 +609,7 @@ public class FaceManager {
             tFullData.read();
 
             //拷贝抓拍人脸数据
-            FacePicData[] tPicData = (FacePicData[]) new FacePicData().toArray(32);
+            NVSSDK.FacePicData[] tPicData = (NVSSDK.FacePicData[]) new NVSSDK.FacePicData().toArray(32);
             for (int i = 0; i < tFacePicStream.iFaceCount && i < 32; i++) {
                 tPicData[i].write();
                 Pointer pPicBuffer = tPicData[i].getPointer();
@@ -657,12 +657,14 @@ public class FaceManager {
                 }
             }
 
-            String id = IdUtil.generateId();
             String preparedNegativePicturePath = sFileNameBase + "face" + record + ".jpg";
-            String certNum = isStranger ? id : new String(tPicData[record].cCertNum).substring(0, 18);
+            String c = new String(tPicData[record].cCertNum);
+            //System.out.println(c);
+            String r = c.substring(0, 18);
 
+            String faceId = String.valueOf(isStranger ? id : r);
             if (snapNotifyListener != null) {
-                snapNotifyListener.snapNotify(isStranger, faceLoginInfo.faceDeviceId, certNum, preparedNegativePicturePath);
+                snapNotifyListener.snapNotify(isStranger, faceLoginInfo.faceDeviceId, faceId, preparedNegativePicturePath);
             }
             return 0;
         }
@@ -670,7 +672,7 @@ public class FaceManager {
 
     //开启图片流
     public int StartSnap() {
-        NetPicPara tNetPicParam = new NetPicPara();
+        NVSSDK.NetPicPara tNetPicParam = new NVSSDK.NetPicPara();
         tNetPicParam.iStructLen = tNetPicParam.size();
         tNetPicParam.iChannelNo = 0;
         tNetPicParam.cbkPicStreamNotify = CallBack_PicStreamInfo; //抓拍回调函数

@@ -1,9 +1,5 @@
-package face;
+package com.xdlr.camera.face;
 
-import face.NVSSDK.ENCODERINFO;
-import face.NVSSDK.MAIN_NOTIFY;
-import face.NVSSDK.NetPicPara;
-import face.NVSSDK.SDK_VERSION;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
@@ -13,7 +9,7 @@ public class NetClient {
     private static NVSSDK nvssdk = (NVSSDK) Native.loadLibrary(System.getProperty("user.dir") + "\\src\\dll\\NVSSDK.dll",
             NVSSDK.class);
 
-    public static int SetNotifyFunction(MAIN_NOTIFY _cbkMain) {
+    public static int SetNotifyFunction(NVSSDK.MAIN_NOTIFY _cbkMain) {
         return nvssdk.NetClient_SetNotifyFunction_V4(_cbkMain, null, null, null, null);
     }
 
@@ -41,7 +37,7 @@ public class NetClient {
         return nvssdk.NetClient_GetLogonStatus(_iLogonID);
     }
 
-    public static int GetVersion(SDK_VERSION _ver) {
+    public static int GetVersion(NVSSDK.SDK_VERSION _ver) {
         return nvssdk.NetClient_GetVersion(_ver);
     }
 
@@ -53,7 +49,7 @@ public class NetClient {
         return nvssdk.NetClient_SetDsmConfig(_iCommand, _pvBuf, _iBufSize);
     }
 
-    public static int GetDevInfo(int _iLogonID, ENCODERINFO _pEncoderInfo) {
+    public static int GetDevInfo(int _iLogonID, NVSSDK.ENCODERINFO _pEncoderInfo) {
         return nvssdk.NetClient_GetDevInfo(_iLogonID, _pEncoderInfo);
     }
 
@@ -74,12 +70,11 @@ public class NetClient {
         return nvssdk.NetClient_GetDevConfig(_iLogonID, _iCommand, _iChannel, _lpOutBuffer, _iOutBufferSize, pRet);
     }
 
-    public static int StartRecvNetPicStream(int _iLogonID, NetPicPara _ptPara, int _iBufLen, IntByReference _puiRecvID) {
+    public static int StartRecvNetPicStream(int _iLogonID, NVSSDK.NetPicPara _ptPara, int _iBufLen, IntByReference _puiRecvID) {
         return nvssdk.NetClient_StartRecvNetPicStream(_iLogonID, _ptPara, _iBufLen, _puiRecvID);
     }
 
     public static int StopRecvNetPicStream(int _iRecvID) {
         return nvssdk.NetClient_StopRecvNetPicStream(_iRecvID);
     }
-
 }

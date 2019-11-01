@@ -1,4 +1,4 @@
-package face;
+package com.xdlr.camera.face;
 
 public class FaceLoginInfo {
     public static int DEVICE_COUNT = 4;

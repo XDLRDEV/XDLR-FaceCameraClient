@@ -1,5 +1,4 @@
-package util;
-
+package com.xdlr.camera.util;
 
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
@@ -20,8 +19,6 @@ public class Base64ImageUtils {
      */
     public static String ImageToBase64ByLocal(String imgFile) {
         // 将图片文件转化为字节数组字符串，并对其进行Base64编码处理
-
-
         InputStream in = null;
         byte[] data = null;
 
@@ -40,7 +37,6 @@ public class Base64ImageUtils {
 
         return encoder.encode(data);// 返回Base64编码过的字节数组字符串
     }
-
 
     /**
      * 在线图片转换成base64字符串
@@ -76,7 +72,6 @@ public class Base64ImageUtils {
         return encoder.encode(data.toByteArray());
     }
 
-
     /**
      * base64字符串转换成图片
      *
@@ -86,9 +81,10 @@ public class Base64ImageUtils {
      * @author ZHANGJL
      * @dateTime 2018-02-23 14:42:17
      */
-    public static boolean Base64ToImage(String imgStr, String imgFilePath) { // 对字节数组字符串进行Base64解码并生成图片
-
-        if (imgStr == null || imgStr.equals("")) // 图像数据为空
+    public static boolean Base64ToImage(String imgStr, String imgFilePath) {
+        // 对字节数组字符串进行Base64解码并生成图片
+        // 图像数据为空
+        if (imgStr == null || imgStr.equals(""))
             return false;
 
         BASE64Decoder decoder = new BASE64Decoder();
@@ -115,8 +111,5 @@ public class Base64ImageUtils {
             e.printStackTrace();
             return false;
         }
-
     }
-
-
 }

@@ -1,12 +1,12 @@
-package face;
+package com.xdlr.camera.face;
 
-import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
+import com.sun.jna.win32.StdCallLibrary.StdCallCallback;
+import com.sun.jna.Callback;
 import com.sun.jna.Structure.ByValue;
 import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.win32.StdCallLibrary.StdCallCallback;
 
 public interface NVSSDK extends Library {
 
@@ -202,6 +202,9 @@ public interface NVSSDK extends Library {
         public int iPlace;
         public int iCertType;
         public byte[] cCertNum = new byte[64];
+//        public int lOptType;
+//        public byte[] cLibUUID = new byte[64];
+//        public byte[] cFaceUUID = new byte[64];
     }
 
     public static class FaceQuery extends Structure {

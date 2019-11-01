@@ -1,4 +1,4 @@
-package util;
+package com.xdlr.camera.util;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -13,7 +13,7 @@ public class HttpUtil {
 
     public static String doPost(String httpUrl, String param) {
         HttpURLConnection connection = getHttpsURLConnection(httpUrl, "POST");
-        try (OutputStream os = connection.getOutputStream()) {
+        try(OutputStream os = connection.getOutputStream()) {
             os.write(param.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
