@@ -7,7 +7,7 @@
 
 ### 构建部署
 
-使用Gradle构建project
+使用[Gradle](https://guides.gradle.org/building-java-applications/#execute_the_build)构建project
 
 ```
 // 构建
